@@ -1,36 +1,24 @@
--- Mobile AimBot Pro v1.0 - Best for Phone
--- Created by Kast13l
+-- Ultimate AimBot & ESP v4.0
+-- Enhanced by Kast13l
 
-local MobileAimBot = {
-    Version = "1.0 (Mobile Pro)",
-    Creator = "Kast13l",
-    Platform = "Mobile"
+local AimBot = {
+    Version = "4.0 (Ultimate)",
+    Creator = "Kast13l"
 }
 
--- === АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ ПЛАТФОРМЫ ===
-local function IsMobile()
-    local UIS = game:GetService("UserInputService")
-    return UIS.TouchEnabled
-end
-
-if not IsMobile() then
-    warn("[MobileAimBot] This script is optimized for mobile devices!")
-end
-
--- === ПЛАВАЮЩАЯ КНОПКА ДЛЯ МОБИЛЬНЫХ ===
-local function CreateMobileButton()
+-- === ПЛАВАЮЩАЯ КНОПКА ===
+local function CreateFloatingButton()
     local buttonGui = Instance.new("ScreenGui")
-    buttonGui.Name = "MobileAimBotUI"
+    buttonGui.Name = "AimBotUI"
     buttonGui.Parent = game:GetService("CoreGui")
     
-    -- Главная кнопка
     local mainButton = Instance.new("TextButton")
-    mainButton.Size = UDim2.new(0, 70, 0, 70)
-    mainButton.Position = UDim2.new(0, 20, 0.5, -35)
+    mainButton.Size = UDim2.new(0, 60, 0, 60)
+    mainButton.Position = UDim2.new(0, 20, 0.5, -30)
     mainButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     mainButton.Text = "🎯"
     mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    mainButton.TextSize = 24
+    mainButton.TextSize = 20
     mainButton.BorderSizePixel = 0
     mainButton.ZIndex = 10
     mainButton.Parent = buttonGui
@@ -39,17 +27,24 @@ local function CreateMobileButton()
     corner.CornerRadius = UDim.new(1, 0)
     corner.Parent = mainButton
     
-    -- Тень
-    local shadow = Instance.new("UIStroke")
-    shadow.Color = Color3.fromRGB(0, 0, 0)
-    shadow.Thickness = 3
-    shadow.Parent = mainButton
-    
     return buttonGui, mainButton
 end
 
--- === КОНФИГУРАЦИЯ ДЛЯ МОБИЛЬНЫХ ===
+-- === КОНФИГУРАЦИЯ ===
 local Config = {
+    AimBot = {
+        Enabled = true,
+        TriggerKey = "MouseButton2",
+        AimPart = "Head",
+        Prediction = 0.13666,
+        Smoothness = 0.03,
+        FOV = 100,
+        FOVVisible = true,
+        FOVColor = Color3.fromRGB(255, 255, 255),
+        TeamCheck = false,
+        VisibleCheck = true
+    },
+    
     ESP = {
         Enabled = true,
         Boxes = true,
@@ -57,27 +52,12 @@ local Config = {
         Health = true,
         Distance = true,
         Tracers = false,
-        Skeletons = false,
         HealthBar = true,
-        Weapon = true
+        Weapon = true,
+        OutOfViewArrows = false,
+        Chams = false
     },
-    AimBot = {
-        Enabled = true,
-        AutoAim = false,  -- Авто-прицеливание без нажатия
-        AimKey = "Touch", -- Для мобильных - касание
-        AimFOV = 60,
-        Smoothness = 0.5,
-        Prediction = true,
-        AimAt = "Head",   -- Head, Torso, HumanoidRootPart
-        TriggerBot = false,
-        SilentAim = false
-    },
-    Movement = {
-        Speed = false,
-        SpeedValue = 25,
-        Bhop = false,
-        JumpPower = 50
-    },
+    
     Visuals = {
         NoFog = true,
         FullBright = true,
@@ -85,593 +65,460 @@ local Config = {
     }
 }
 
--- === ЛУЧШИЙ ESP ДЛЯ МОБИЛЬНЫХ ===
-local function InitializeProESP()
-    local players = game:GetService("Players")
-    local localPlayer = players.LocalPlayer
-    local camera = workspace.CurrentCamera
-    local runService = game:GetService("RunService")
+-- === УЛУЧШЕННЫЙ ESP БЕЗ ОГРАНИЧЕНИЙ FPS ===
+local function InitializeEnhancedESP()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = workspace.CurrentCamera
+    local RunService = game:GetService("RunService")
     
-    local espObjects = {}
+    local ESPObjects = {}
     
-    local function createESP(player)
-        if player == localPlayer then return end
+    local function CreateESP(Player)
+        if Player == LocalPlayer then return end
         
-        espObjects[player] = {
-            -- Основные элементы
+        ESPObjects[Player] = {
             Box = Drawing.new("Square"),
             Name = Drawing.new("Text"),
             Health = Drawing.new("Text"),
             Distance = Drawing.new("Text"),
             Weapon = Drawing.new("Text"),
-            
-            -- Дополнительные элементы
             HealthBar = Drawing.new("Square"),
             HealthBarBg = Drawing.new("Square"),
             BoxFill = Drawing.new("Square"),
-            Tracer = Drawing.new("Line"),
-            
-            -- Скелет (опционально)
-            HeadDot = Drawing.new("Circle"),
-            Skeleton = {}
+            Tracer = Drawing.new("Line")
         }
         
-        local esp = espObjects[player]
+        local ESP = ESPObjects[Player]
         
-        -- Настройка стилей для лучшей видимости на мобильных
-        esp.Box.Thickness = 2
-        esp.Box.Filled = false
+        ESP.Box.Thickness = 2
+        ESP.Box.Filled = false
         
-        esp.BoxFill.Thickness = 1
-        esp.BoxFill.Filled = true
-        esp.BoxFill.Transparency = 0.1
+        ESP.BoxFill.Thickness = 1
+        ESP.BoxFill.Filled = true
+        ESP.BoxFill.Transparency = 0.1
         
-        esp.Name.Size = 16  -- Больше для мобильных
-        esp.Name.Outline = true
-        esp.Name.OutlineColor = Color3.new(0, 0, 0)
+        ESP.Name.Size = 14
+        ESP.Name.Outline = true
+        ESP.Name.OutlineColor = Color3.new(0, 0, 0)
         
-        esp.Health.Size = 14
-        esp.Health.Outline = true
-        esp.Health.OutlineColor = Color3.new(0, 0, 0)
+        ESP.Health.Size = 12
+        ESP.Health.Outline = true
+        ESP.Health.OutlineColor = Color3.new(0, 0, 0)
         
-        esp.Distance.Size = 12
-        esp.Distance.Outline = true
-        esp.Distance.OutlineColor = Color3.new(0, 0, 0)
+        ESP.Distance.Size = 12
+        ESP.Distance.Outline = true
+        ESP.Distance.OutlineColor = Color3.new(0, 0, 0)
         
-        esp.Weapon.Size = 12
-        esp.Weapon.Outline = true
-        esp.Weapon.OutlineColor = Color3.new(0, 0, 0)
+        ESP.Weapon.Size = 12
+        ESP.Weapon.Outline = true
+        ESP.Weapon.OutlineColor = Color3.new(0, 0, 0)
         
-        esp.HealthBarBg.Filled = true
-        esp.HealthBarBg.Color = Color3.new(0, 0, 0)
+        ESP.HealthBarBg.Filled = true
+        ESP.HealthBarBg.Color = Color3.new(0, 0, 0)
         
-        esp.HealthBar.Filled = true
+        ESP.HealthBar.Filled = true
         
-        esp.Tracer.Thickness = 2
-        
-        esp.HeadDot.Thickness = 2
-        esp.HeadDot.Filled = true
-        esp.HeadDot.NumSides = 12
+        ESP.Tracer.Thickness = 2
     end
     
-    local function getPlayerWeapon(player)
-        if player.Character then
-            local tool = player.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                return tool.Name
+    local function GetPlayerWeapon(Player)
+        if Player.Character then
+            local Tool = Player.Character:FindFirstChildOfClass("Tool")
+            if Tool then
+                return Tool.Name
             end
             
-            -- Поиск оружия в инвентаре
-            local backpack = player:FindFirstChild("Backpack")
-            if backpack then
-                local weapons = backpack:GetChildren()
-                if #weapons > 0 then
-                    return weapons[1].Name
+            local Backpack = Player:FindFirstChild("Backpack")
+            if Backpack then
+                local Weapons = Backpack:GetChildren()
+                if #Weapons > 0 then
+                    return Weapons[1].Name
                 end
             end
         end
         return "No Weapon"
     end
     
-    local function updateSkeleton(player, esp)
-        if not Config.ESP.Skeletons then return end
-        
-        local character = player.Character
-        if not character then return end
-        
-        local skeletonParts = {
-            {"Head", "UpperTorso"},
-            {"UpperTorso", "LowerTorso"},
-            {"UpperTorso", "LeftUpperArm"},
-            {"LeftUpperArm", "LeftLowerArm"},
-            {"LeftLowerArm", "LeftHand"},
-            {"UpperTorso", "RightUpperArm"},
-            {"RightUpperArm", "RightLowerArm"},
-            {"RightLowerArm", "RightHand"},
-            {"LowerTorso", "LeftUpperLeg"},
-            {"LeftUpperLeg", "LeftLowerLeg"},
-            {"LeftLowerLeg", "LeftFoot"},
-            {"LowerTorso", "RightUpperLeg"},
-            {"RightUpperLeg", "RightLowerLeg"},
-            {"RightLowerLeg", "RightFoot"}
-        }
-        
-        for i, bone in ipairs(skeletonParts) do
-            if not esp.Skeleton[i] then
-                esp.Skeleton[i] = Drawing.new("Line")
-                esp.Skeleton[i].Thickness = 2
-                esp.Skeleton[i].Color = Color3.new(1, 1, 0)
-            end
-            
-            local part1 = character:FindFirstChild(bone[1])
-            local part2 = character:FindFirstChild(bone[2])
-            
-            if part1 and part2 then
-                local pos1, vis1 = camera:WorldToViewportPoint(part1.Position)
-                local pos2, vis2 = camera:WorldToViewportPoint(part2.Position)
+    -- Без ограничений FPS - максимальная производительность
+    RunService.RenderStepped:Connect(function()
+        for Player, ESP in pairs(ESPObjects) do
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                local RootPart = Player.Character.HumanoidRootPart
+                local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
+                local Head = Player.Character:FindFirstChild("Head")
                 
-                if vis1 and vis2 then
-                    esp.Skeleton[i].Visible = true
-                    esp.Skeleton[i].From = Vector2.new(pos1.X, pos1.Y)
-                    esp.Skeleton[i].To = Vector2.new(pos2.X, pos2.Y)
-                else
-                    esp.Skeleton[i].Visible = false
-                end
-            else
-                esp.Skeleton[i].Visible = false
-            end
-        end
-    end
-    
-    -- Оптимизированное обновление ESP
-    local lastUpdate = 0
-    runService.RenderStepped:Connect(function()
-        local currentTime = tick()
-        if currentTime - lastUpdate < 0.05 then return end -- 20 FPS для оптимизации
-        lastUpdate = currentTime
-        
-        for player, esp in pairs(espObjects) do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local rootPart = player.Character.HumanoidRootPart
-                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                local head = player.Character:FindFirstChild("Head")
-                
-                if rootPart and humanoid and humanoid.Health > 0 and head then
-                    local headPos, onScreen = camera:WorldToViewportPoint(head.Position)
+                if RootPart and Humanoid and Humanoid.Health > 0 and Head then
+                    local HeadPos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
                     
-                    if onScreen then
-                        local distance = (rootPart.Position - camera.CFrame.Position).Magnitude
-                        local scale = math.clamp(1200 / distance, 0.3, 2.0)
+                    if OnScreen then
+                        local Distance = (RootPart.Position - Camera.CFrame.Position).Magnitude
+                        local Scale = math.clamp(1200 / Distance, 0.3, 2.0)
                         
-                        local boxHeight = 40 * scale
-                        local boxWidth = 20 * scale
+                        local BoxHeight = 40 * Scale
+                        local BoxWidth = 20 * Scale
                         
-                        -- Цвет по здоровью с плавными переходами
-                        local health = humanoid.Health
-                        local maxHealth = humanoid.MaxHealth
-                        local healthPercent = health / maxHealth
+                        local Health = Humanoid.Health
+                        local MaxHealth = Humanoid.MaxHealth
+                        local HealthPercent = Health / MaxHealth
                         
-                        local color = Color3.new(1, 1, 1)
-                        if healthPercent > 0.7 then
-                            color = Color3.fromRGB(0, 255, 0)    -- Зеленый
-                        elseif healthPercent > 0.4 then
-                            color = Color3.fromRGB(255, 255, 0)  -- Желтый
-                        elseif healthPercent > 0.2 then
-                            color = Color3.fromRGB(255, 165, 0)  -- Оранжевый
+                        local Color = Color3.new(1, 1, 1)
+                        if HealthPercent > 0.7 then
+                            Color = Color3.fromRGB(0, 255, 0)
+                        elseif HealthPercent > 0.4 then
+                            Color = Color3.fromRGB(255, 255, 0)
+                        elseif HealthPercent > 0.2 then
+                            Color = Color3.fromRGB(255, 165, 0)
                         else
-                            color = Color3.fromRGB(255, 0, 0)    -- Красный
+                            Color = Color3.fromRGB(255, 0, 0)
                         end
                         
-                        -- Позиции элементов
-                        local boxX = headPos.X - boxWidth / 2
-                        local boxY = headPos.Y - boxHeight / 2
+                        local BoxX = HeadPos.X - BoxWidth / 2
+                        local BoxY = HeadPos.Y - BoxHeight / 2
                         
-                        -- Основной бокс
-                        esp.Box.Visible = Config.ESP.Enabled and Config.ESP.Boxes
-                        esp.Box.Color = color
-                        esp.Box.Position = Vector2.new(boxX, boxY)
-                        esp.Box.Size = Vector2.new(boxWidth, boxHeight)
+                        -- Box ESP
+                        ESP.Box.Visible = Config.ESP.Enabled and Config.ESP.Boxes
+                        ESP.Box.Color = Color
+                        ESP.Box.Position = Vector2.new(BoxX, BoxY)
+                        ESP.Box.Size = Vector2.new(BoxWidth, BoxHeight)
                         
-                        -- Заполненный бокс
-                        esp.BoxFill.Visible = Config.ESP.Enabled and Config.ESP.Boxes
-                        esp.BoxFill.Color = color
-                        esp.BoxFill.Position = Vector2.new(boxX, boxY)
-                        esp.BoxFill.Size = Vector2.new(boxWidth, boxHeight)
+                        -- Box Fill
+                        ESP.BoxFill.Visible = Config.ESP.Enabled and Config.ESP.Boxes
+                        ESP.BoxFill.Color = Color
+                        ESP.BoxFill.Position = Vector2.new(BoxX, BoxY)
+                        ESP.BoxFill.Size = Vector2.new(BoxWidth, BoxHeight)
                         
-                        -- Имя игрока
-                        esp.Name.Visible = Config.ESP.Enabled and Config.ESP.Names
-                        esp.Name.Color = color
-                        esp.Name.Position = Vector2.new(headPos.X, boxY - 25)
-                        esp.Name.Text = player.Name
+                        -- Name
+                        ESP.Name.Visible = Config.ESP.Enabled and Config.ESP.Names
+                        ESP.Name.Color = Color
+                        ESP.Name.Position = Vector2.new(HeadPos.X, BoxY - 20)
+                        ESP.Name.Text = Player.Name
                         
-                        -- Здоровье
-                        esp.Health.Visible = Config.ESP.Enabled and Config.ESP.Health
-                        esp.Health.Color = color
-                        esp.Health.Position = Vector2.new(headPos.X, boxY + boxHeight + 5)
-                        esp.Health.Text = "❤️ " .. math.floor(health)
+                        -- Health
+                        ESP.Health.Visible = Config.ESP.Enabled and Config.ESP.Health
+                        ESP.Health.Color = Color
+                        ESP.Health.Position = Vector2.new(HeadPos.X, BoxY + BoxHeight + 5)
+                        ESP.Health.Text = "HP: " .. math.floor(Health)
                         
-                        -- Дистанция
-                        esp.Distance.Visible = Config.ESP.Enabled and Config.ESP.Distance
-                        esp.Distance.Color = color
-                        esp.Distance.Position = Vector2.new(headPos.X, boxY + boxHeight + 22)
-                        esp.Distance.Text = math.floor(distance) .. "m"
+                        -- Distance
+                        ESP.Distance.Visible = Config.ESP.Enabled and Config.ESP.Distance
+                        ESP.Distance.Color = Color
+                        ESP.Distance.Position = Vector2.new(HeadPos.X, BoxY + BoxHeight + 22)
+                        ESP.Distance.Text = math.floor(Distance) .. "m"
                         
-                        -- Оружие
-                        esp.Weapon.Visible = Config.ESP.Enabled and Config.ESP.Weapon
-                        esp.Weapon.Color = color
-                        esp.Weapon.Position = Vector2.new(headPos.X, boxY + boxHeight + 39)
-                        esp.Weapon.Text = "🔫 " .. getPlayerWeapon(player)
+                        -- Weapon
+                        ESP.Weapon.Visible = Config.ESP.Enabled and Config.ESP.Weapon
+                        ESP.Weapon.Color = Color
+                        ESP.Weapon.Position = Vector2.new(HeadPos.X, BoxY + BoxHeight + 39)
+                        ESP.Weapon.Text = GetPlayerWeapon(Player)
                         
                         -- Health Bar
                         if Config.ESP.HealthBar then
-                            local barWidth = boxWidth
-                            local barHeight = 4
-                            local barX = boxX
-                            local barY = boxY - 8
+                            local BarWidth = BoxWidth
+                            local BarHeight = 4
+                            local BarX = BoxX
+                            local BarY = BoxY - 8
                             
-                            esp.HealthBarBg.Visible = true
-                            esp.HealthBarBg.Position = Vector2.new(barX, barY)
-                            esp.HealthBarBg.Size = Vector2.new(barWidth, barHeight)
+                            ESP.HealthBarBg.Visible = true
+                            ESP.HealthBarBg.Position = Vector2.new(BarX, BarY)
+                            ESP.HealthBarBg.Size = Vector2.new(BarWidth, BarHeight)
                             
-                            esp.HealthBar.Visible = true
-                            esp.HealthBar.Color = color
-                            esp.HealthBar.Position = Vector2.new(barX, barY)
-                            esp.HealthBar.Size = Vector2.new(barWidth * healthPercent, barHeight)
+                            ESP.HealthBar.Visible = true
+                            ESP.HealthBar.Color = Color
+                            ESP.HealthBar.Position = Vector2.new(BarX, BarY)
+                            ESP.HealthBar.Size = Vector2.new(BarWidth * HealthPercent, BarHeight)
                         else
-                            esp.HealthBarBg.Visible = false
-                            esp.HealthBar.Visible = false
+                            ESP.HealthBarBg.Visible = false
+                            ESP.HealthBar.Visible = false
                         end
                         
-                        -- Трассировка
+                        -- Tracer
                         if Config.ESP.Tracers then
-                            esp.Tracer.Visible = true
-                            esp.Tracer.Color = color
-                            esp.Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-                            esp.Tracer.To = Vector2.new(headPos.X, headPos.Y)
+                            ESP.Tracer.Visible = true
+                            ESP.Tracer.Color = Color
+                            ESP.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                            ESP.Tracer.To = Vector2.new(HeadPos.X, HeadPos.Y)
                         else
-                            esp.Tracer.Visible = false
+                            ESP.Tracer.Visible = false
                         end
-                        
-                        -- Точка на голове
-                        esp.HeadDot.Visible = Config.ESP.Enabled
-                        esp.HeadDot.Color = color
-                        esp.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
-                        esp.HeadDot.Radius = 3 * scale
-                        
-                        -- Скелет
-                        updateSkeleton(player, esp)
                         
                     else
-                        -- Скрываем все элементы если игрок не на экране
-                        for name, drawing in pairs(esp) do
-                            if name ~= "Skeleton" then
-                                drawing.Visible = false
-                            end
-                        end
-                        for _, bone in pairs(esp.Skeleton) do
-                            bone.Visible = false
+                        for _, Drawing in pairs(ESP) do
+                            Drawing.Visible = false
                         end
                     end
                 else
-                    for name, drawing in pairs(esp) do
-                        if name ~= "Skeleton" then
-                            drawing.Visible = false
-                        end
-                    end
-                    for _, bone in pairs(esp.Skeleton) do
-                        bone.Visible = false
+                    for _, Drawing in pairs(ESP) do
+                        Drawing.Visible = false
                     end
                 end
             else
-                for name, drawing in pairs(esp) do
-                    if name ~= "Skeleton" then
-                        drawing.Visible = false
-                    end
-                end
-                for _, bone in pairs(esp.Skeleton) do
-                    bone.Visible = false
+                for _, Drawing in pairs(ESP) do
+                    Drawing.Visible = false
                 end
             end
         end
     end)
     
-    -- Инициализация ESP для всех игроков
-    for _, player in pairs(players:GetPlayers()) do
-        if player ~= localPlayer then
-            createESP(player)
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            CreateESP(Player)
         end
     end
     
-    players.PlayerAdded:Connect(createESP)
-    players.PlayerRemoving:Connect(function(player)
-        if espObjects[player] then
-            for name, drawing in pairs(espObjects[player]) do
-                if name == "Skeleton" then
-                    for _, bone in pairs(drawing) do
-                        bone:Remove()
-                    end
-                else
-                    drawing:Remove()
-                end
+    Players.PlayerAdded:Connect(CreateESP)
+    Players.PlayerRemoving:Connect(function(Player)
+        if ESPObjects[Player] then
+            for _, Drawing in pairs(ESPObjects[Player]) do
+                Drawing:Remove()
             end
-            espObjects[player] = nil
+            ESPObjects[Player] = nil
         end
     end)
 end
 
--- === ЛУЧШИЙ AIMBOT ДЛЯ МОБИЛЬНЫХ ===
-local function InitializeProAimBot()
-    local players = game:GetService("Players")
-    local localPlayer = players.LocalPlayer
-    local camera = workspace.CurrentCamera
-    local runService = game:GetService("RunService")
-    local userInputService = game:GetService("UserInputService")
+-- === AIMBOT НА ОСНОВЕ EXUNYS V3 ===
+local function InitializeAimBot()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = workspace.CurrentCamera
+    local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
     
-    -- Визуальные элементы
-    local fovCircle = Drawing.new("Circle")
-    fovCircle.Visible = false
-    fovCircle.Color = Color3.new(1, 1, 1)
-    fovCircle.Thickness = 2
-    fovCircle.Filled = false
-    fovCircle.NumSides = 64
+    -- FOV Circle
+    local FOVCircle = Drawing.new("Circle")
+    FOVCircle.Visible = Config.AimBot.FOVVisible
+    FOVCircle.Color = Config.AimBot.FOVColor
+    FOVCircle.Thickness = 2
+    FOVCircle.Filled = false
+    FOVCircle.NumSides = 64
+    FOVCircle.Radius = Config.AimBot.FOV
     
-    local targetDot = Drawing.new("Circle")
-    targetDot.Visible = false
-    targetDot.Color = Color3.new(1, 0, 0)
-    targetDot.Thickness = 2
-    targetDot.Filled = true
-    targetDot.Radius = 3
+    -- Crosshair
+    local Crosshair = Drawing.new("Circle")
+    Crosshair.Visible = Config.Visuals.Crosshair
+    Crosshair.Color = Color3.new(1, 1, 1)
+    Crosshair.Thickness = 2
+    Crosshair.Filled = false
+    Crosshair.Radius = 5
     
-    local crosshair = Drawing.new("Circle")
-    crosshair.Visible = false
-    crosshair.Color = Color3.new(1, 1, 1)
-    crosshair.Thickness = 2
-    crosshair.Filled = false
-    crosshair.Radius = 6
-    
-    -- Утилиты
-    local function findBestTarget()
-        local bestTarget = nil
-        local bestScore = 0
-        local mousePos = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    local function FindClosestTarget()
+        local ClosestTarget = nil
+        local ShortestDistance = Config.AimBot.FOV
+        local MousePos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         
-        for _, player in pairs(players:GetPlayers()) do
-            if player ~= localPlayer and player.Character then
-                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                local head = player.Character:FindFirstChild("Head")
-                local torso = player.Character:FindFirstChild("UpperTorso") or player.Character:FindFirstChild("Torso")
+        for _, Player in pairs(Players:GetPlayers()) do
+            if Player ~= LocalPlayer and Player.Character then
+                local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
+                local AimPart = Player.Character:FindFirstChild(Config.AimBot.AimPart)
                 
-                if humanoid and humanoid.Health > 0 and head then
-                    local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
-                    
-                    if onScreen then
-                        local distance = (mousePos - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                        
-                        if distance <= Config.AimBot.AimFOV then
-                            -- Система оценки целей
-                            local score = 0
-                            
-                            -- Близость к центру экрана
-                            score = score + (1 - distance / Config.AimBot.AimFOV) * 100
-                            
-                            -- Здоровье (предпочтение раненым целям)
-                            local healthPercent = humanoid.Health / humanoid.MaxHealth
-                            score = score + (1 - healthPercent) * 50
-                            
-                            -- Дистанция (предпочтение ближним целям)
-                            local worldDistance = (head.Position - camera.CFrame.Position).Magnitude
-                            score = score + (1 - math.min(worldDistance / 100, 1)) * 30
-                            
-                            if score > bestScore then
-                                bestScore = score
-                                bestTarget = head
-                            end
+                if Humanoid and Humanoid.Health > 0 and AimPart then
+                    -- Team check
+                    if Config.AimBot.TeamCheck then
+                        if LocalPlayer.Team and Player.Team and LocalPlayer.Team == Player.Team then
+                            continue
                         end
                     end
-                end
-            end
-        end
-        
-        return bestTarget
-    end
-    
-    local function smoothAim(targetPos, currentPos, smoothness)
-        local delta = (targetPos - currentPos) * smoothness
-        return currentPos + delta
-    end
-    
-    -- Основной цикл аимбота
-    runService.RenderStepped:Connect(function()
-        -- Обновляем визуальные элементы
-        fovCircle.Visible = Config.AimBot.Enabled
-        fovCircle.Radius = Config.AimBot.AimFOV
-        fovCircle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-        
-        crosshair.Visible = Config.Visuals.Crosshair
-        crosshair.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-        
-        -- Логика аимбота
-        if Config.AimBot.Enabled then
-            local target = findBestTarget()
-            
-            if target then
-                local screenPos = camera:WorldToViewportPoint(target.Position)
-                local targetPos = Vector2.new(screenPos.X, screenPos.Y)
-                
-                -- Показываем индикатор цели
-                targetDot.Visible = true
-                targetDot.Position = targetPos
-                
-                -- Авто-прицеливание
-                if Config.AimBot.AutoAim then
-                    local mousePos = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-                    local smoothedPos = smoothAim(targetPos, mousePos, Config.AimBot.Smoothness)
                     
-                    -- Для мобильных эмулируем касание
-                    if userInputService.TouchEnabled then
-                        -- Мобильное прицеливание (упрощенное)
-                        local delta = (targetPos - mousePos) * 0.1
-                        -- Здесь может быть логика для мобильного управления
-                    end
-                end
-                
-                -- Триггербот
-                if Config.AimBot.TriggerBot then
-                    local mousePos = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-                    local distance = (targetPos - mousePos).Magnitude
-                    
-                    if distance < 10 then  -- Маленький радиус для точности
-                        -- Авто-стрельба
-                        if localPlayer.Character then
-                            local tool = localPlayer.Character:FindFirstChildOfClass("Tool")
-                            if tool then
-                                -- Эмуляция выстрела
-                                local remote = tool:FindFirstChildOfClass("RemoteEvent")
-                                if remote then
-                                    remote:FireServer()
+                    -- Visible check
+                    if Config.AimBot.VisibleCheck then
+                        local Character = LocalPlayer.Character
+                        if Character then
+                            local Head = Character:FindFirstChild("Head")
+                            if Head then
+                                local Origin = Head.Position
+                                local Direction = (AimPart.Position - Origin).Unit
+                                local RaycastParams = RaycastParams.new()
+                                RaycastParams.FilterDescendantsInstances = {Character, AimPart.Parent}
+                                RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                
+                                local RaycastResult = workspace:Raycast(Origin, Direction * 1000, RaycastParams)
+                                if RaycastResult and not RaycastResult.Instance:IsDescendantOf(AimPart.Parent) then
+                                    continue
                                 end
                             end
                         end
                     end
+                    
+                    local ScreenPos, OnScreen = Camera:WorldToViewportPoint(AimPart.Position)
+                    
+                    if OnScreen then
+                        local Distance = (MousePos - Vector2.new(ScreenPos.X, ScreenPos.Y)).Magnitude
+                        
+                        if Distance < ShortestDistance then
+                            ShortestDistance = Distance
+                            ClosestTarget = AimPart
+                        end
+                    end
                 end
-            else
-                targetDot.Visible = false
             end
-        else
-            targetDot.Visible = false
+        end
+        
+        return ClosestTarget
+    end
+    
+    RunService.RenderStepped:Connect(function()
+        -- Update FOV Circle
+        FOVCircle.Visible = Config.AimBot.FOVVisible
+        FOVCircle.Radius = Config.AimBot.FOV
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        
+        -- Update Crosshair
+        Crosshair.Visible = Config.Visuals.Crosshair
+        Crosshair.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        
+        -- AimBot Logic
+        if Config.AimBot.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType[Config.AimBot.TriggerKey]) then
+            local Target = FindClosestTarget()
+            if Target then
+                local ScreenPos = Camera:WorldToViewportPoint(Target.Position)
+                
+                -- Prediction
+                local RootPart = Target.Parent:FindFirstChild("HumanoidRootPart")
+                if RootPart and Config.AimBot.Prediction > 0 then
+                    local Velocity = RootPart.Velocity
+                    ScreenPos = Camera:WorldToViewportPoint(Target.Position + Velocity * Config.AimBot.Prediction)
+                end
+                
+                local TargetPos = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                local MousePos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                
+                local Delta = (TargetPos - MousePos) * Config.AimBot.Smoothness
+                mousemoverel(Delta.X, Delta.Y)
+            end
         end
     end)
-    
-    -- Обработка касаний для мобильных
-    if userInputService.TouchEnabled then
-        userInputService.TouchStarted:Connect(function(touch, gameProcessed)
-            if gameProcessed then return end
-            
-            if Config.AimBot.Enabled and not Config.AimBot.AutoAim then
-                local target = findBestTarget()
-                if target then
-                    -- Логика ручного прицеливания по касанию
-                    -- (можно добавить специальную кнопку для прицеливания)
-                end
-            end
-        end)
-    end
 end
 
--- === МОБИЛЬНЫЙ ИНТЕРФЕЙС ===
-local function CreateMobileInterface()
-    local mainGui = Instance.new("ScreenGui")
-    mainGui.Name = "MobileAimBotMenu"
-    mainGui.Parent = game:GetService("CoreGui")
-    mainGui.Enabled = false
+-- === ВИЗУАЛЬНЫЕ УЛУЧШЕНИЯ ===
+local function InitializeVisuals()
+    local RunService = game:GetService("RunService")
     
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 300, 0, 400)
-    mainFrame.Position = UDim2.new(0, 80, 0.5, -200)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Active = true
-    mainFrame.Draggable = true
-    mainFrame.ClipsDescendants = true
-    mainFrame.Parent = mainGui
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
-    corner.Parent = mainFrame
-    
-    -- Заголовок
-    local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 40)
-    header.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-    header.BorderSizePixel = 0
-    header.Parent = mainFrame
-    
-    local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 12)
-    headerCorner.Parent = header
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -80, 1, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "🎯 Mobile AimBot Pro"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 16
-    title.Font = Enum.Font.GothamBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Position = UDim2.new(0, 15, 0, 0)
-    title.Parent = header
-    
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0, 5)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = 18
-    closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = header
-    
-    local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 8)
-    closeCorner.Parent = closeBtn
-    
-    -- Контент
-    local contentFrame = Instance.new("ScrollingFrame")
-    contentFrame.Size = UDim2.new(1, 0, 1, -40)
-    contentFrame.Position = UDim2.new(0, 0, 0, 40)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.BorderSizePixel = 0
-    contentFrame.ScrollBarThickness = 6
-    contentFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
-    contentFrame.Parent = mainFrame
-    
-    -- Функция создания переключателя
-    local function CreateToggle(parent, name, configCategory, configKey, yPosition)
-        local toggleFrame = Instance.new("Frame")
-        toggleFrame.Size = UDim2.new(1, -20, 0, 35)
-        toggleFrame.Position = UDim2.new(0, 10, 0, yPosition)
-        toggleFrame.BackgroundTransparency = 1
-        toggleFrame.Parent = parent
+    RunService.Heartbeat:Connect(function()
+        if Config.Visuals.NoFog then
+            game:GetService("Lighting").FogEnd = 1000000
+        end
         
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0.7, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = name
-        label.TextColor3 = Color3.fromRGB(220, 220, 220)
-        label.TextSize = 14
-        label.Font = Enum.Font.Gotham
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = toggleFrame
+        if Config.Visuals.FullBright then
+            game:GetService("Lighting").GlobalShadows = false
+            game:GetService("Lighting").Brightness = 2
+        end
+    end)
+end
+
+-- === ИНТЕРФЕЙС ===
+local function CreateInterface()
+    local MainGui = Instance.new("ScreenGui")
+    MainGui.Name = "AimBotInterface"
+    MainGui.Parent = game:GetService("CoreGui")
+    MainGui.Enabled = false
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0, 80, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.ClipsDescendants = true
+    MainFrame.Parent = MainGui
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = MainFrame
+    
+    -- Header
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 35)
+    Header.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    Header.BorderSizePixel = 0
+    Header.Parent = MainFrame
+    
+    local HeaderCorner = Instance.new("UICorner")
+    HeaderCorner.CornerRadius = UDim.new(0, 8)
+    HeaderCorner.Parent = Header
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -70, 1, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "🎯 Ultimate AimBot v4.0"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.Parent = Header
+    
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    CloseBtn.Position = UDim2.new(1, -35, 0, 2)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    CloseBtn.Text = "✕"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseBtn.TextSize = 18
+    CloseBtn.BorderSizePixel = 0
+    CloseBtn.Parent = Header
+    
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 6)
+    CloseCorner.Parent = CloseBtn
+    
+    -- Content
+    local ContentFrame = Instance.new("ScrollingFrame")
+    ContentFrame.Size = UDim2.new(1, 0, 1, -40)
+    ContentFrame.Position = UDim2.new(0, 0, 0, 40)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.BorderSizePixel = 0
+    ContentFrame.ScrollBarThickness = 6
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+    ContentFrame.Parent = MainFrame
+    
+    local function CreateToggle(Parent, Name, ConfigCategory, ConfigKey, YPosition)
+        local ToggleFrame = Instance.new("Frame")
+        ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
+        ToggleFrame.Position = UDim2.new(0, 10, 0, YPosition)
+        ToggleFrame.BackgroundTransparency = 1
+        ToggleFrame.Parent = Parent
         
-        local toggle = Instance.new("TextButton")
-        toggle.Size = UDim2.new(0, 50, 0, 25)
-        toggle.Position = UDim2.new(0.7, 0, 0.5, -12)
-        toggle.BackgroundColor3 = Config[configCategory][configKey] and Color3.fromRGB(0, 200, 80) or Color3.fromRGB(70, 70, 80)
-        toggle.Text = ""
-        toggle.BorderSizePixel = 0
-        toggle.Parent = toggleFrame
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(0.7, 0, 1, 0)
+        Label.BackgroundTransparency = 1
+        Label.Text = Name
+        Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+        Label.TextSize = 13
+        Label.Font = Enum.Font.Gotham
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.Parent = ToggleFrame
         
-        local toggleCorner = Instance.new("UICorner")
-        toggleCorner.CornerRadius = UDim.new(0, 12)
-        toggleCorner.Parent = toggle
+        local Toggle = Instance.new("TextButton")
+        Toggle.Size = UDim2.new(0, 45, 0, 22)
+        Toggle.Position = UDim2.new(0.7, 0, 0.5, -11)
+        Toggle.BackgroundColor3 = Config[ConfigCategory][ConfigKey] and Color3.fromRGB(0, 200, 80) or Color3.fromRGB(70, 70, 80)
+        Toggle.Text = ""
+        Toggle.BorderSizePixel = 0
+        Toggle.Parent = ToggleFrame
         
-        local toggleIndicator = Instance.new("Frame")
-        toggleIndicator.Size = UDim2.new(0, 21, 0, 21)
-        toggleIndicator.Position = UDim2.new(0, Config[configCategory][configKey] and 27 or 2, 0.5, -10)
-        toggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        toggleIndicator.BorderSizePixel = 0
-        toggleIndicator.Parent = toggle
+        local ToggleCorner = Instance.new("UICorner")
+        ToggleCorner.CornerRadius = UDim.new(0, 11)
+        ToggleCorner.Parent = Toggle
         
-        local indicatorCorner = Instance.new("UICorner")
-        indicatorCorner.CornerRadius = UDim.new(1, 0)
-        indicatorCorner.Parent = toggleIndicator
+        local ToggleIndicator = Instance.new("Frame")
+        ToggleIndicator.Size = UDim2.new(0, 18, 0, 18)
+        ToggleIndicator.Position = UDim2.new(0, Config[ConfigCategory][ConfigKey] and 25 or 2, 0.5, -9)
+        ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleIndicator.BorderSizePixel = 0
+        ToggleIndicator.Parent = Toggle
         
-        toggle.MouseButton1Click:Connect(function()
-            Config[configCategory][configKey] = not Config[configCategory][configKey]
-            toggle.BackgroundColor3 = Config[configCategory][configKey] and Color3.fromRGB(0, 200, 80) or Color3.fromRGB(70, 70, 80)
+        local IndicatorCorner = Instance.new("UICorner")
+        IndicatorCorner.CornerRadius = UDim.new(1, 0)
+        IndicatorCorner.Parent = ToggleIndicator
+        
+        Toggle.MouseButton1Click:Connect(function()
+            Config[ConfigCategory][ConfigKey] = not Config[ConfigCategory][ConfigKey]
+            Toggle.BackgroundColor3 = Config[ConfigCategory][ConfigKey] and Color3.fromRGB(0, 200, 80) or Color3.fromRGB(70, 70, 80)
             
-            toggleIndicator:TweenPosition(
-                UDim2.new(0, Config[configCategory][configKey] and 27 or 2, 0.5, -10),
+            ToggleIndicator:TweenPosition(
+                UDim2.new(0, Config[ConfigCategory][ConfigKey] and 25 or 2, 0.5, -9),
                 Enum.EasingDirection.Out,
                 Enum.EasingStyle.Quad,
                 0.15,
@@ -679,79 +526,66 @@ local function CreateMobileInterface()
             )
         end)
         
-        return toggleFrame
+        return ToggleFrame
     end
     
-    -- Добавляем элементы управления
-    local yPosition = 15
+    -- Add toggles
+    local YPosition = 15
     
-    -- ESP настройки
-    CreateToggle(contentFrame, "📱 ESP Enabled", "ESP", "Enabled", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "🟦 Boxes", "ESP", "Boxes", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "👤 Names", "ESP", "Names", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "❤️ Health", "ESP", "Health", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "📏 Distance", "ESP", "Distance", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "🔫 Weapon", "ESP", "Weapon", yPosition); yPosition = yPosition + 40
+    -- AimBot
+    CreateToggle(ContentFrame, "🎯 AimBot Enabled", "AimBot", "Enabled", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "👁️ FOV Circle", "AimBot", "FOVVisible", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "👥 Team Check", "AimBot", "TeamCheck", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "🔍 Visible Check", "AimBot", "VisibleCheck", YPosition); YPosition = YPosition + 35
     
-    -- AimBot настройки
-    CreateToggle(contentFrame, "🎯 AimBot", "AimBot", "Enabled", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "🤖 Auto Aim", "AimBot", "AutoAim", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "🔫 TriggerBot", "AimBot", "TriggerBot", yPosition); yPosition = yPosition + 40
+    -- ESP
+    CreateToggle(ContentFrame, "📱 ESP Enabled", "ESP", "Enabled", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "🟦 Boxes", "ESP", "Boxes", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "👤 Names", "ESP", "Names", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "❤️ Health", "ESP", "Health", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "📏 Distance", "ESP", "Distance", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "🔫 Weapon", "ESP", "Weapon", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "📊 Health Bar", "ESP", "HealthBar", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "📈 Tracers", "ESP", "Tracers", YPosition); YPosition = YPosition + 35
     
-    -- Визуальные настройки
-    CreateToggle(contentFrame, "🌫️ No Fog", "Visuals", "NoFog", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "💡 Full Bright", "Visuals", "FullBright", yPosition); yPosition = yPosition + 40
-    CreateToggle(contentFrame, "🎯 Crosshair", "Visuals", "Crosshair", yPosition); yPosition = yPosition + 40
+    -- Visuals
+    CreateToggle(ContentFrame, "🌫️ No Fog", "Visuals", "NoFog", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "💡 Full Bright", "Visuals", "FullBright", YPosition); YPosition = YPosition + 35
+    CreateToggle(ContentFrame, "🎯 Crosshair", "Visuals", "Crosshair", YPosition); YPosition = YPosition + 35
     
-    -- Обработчики кнопок
-    closeBtn.MouseButton1Click:Connect(function()
-        mainGui.Enabled = false
+    CloseBtn.MouseButton1Click:Connect(function()
+        MainGui.Enabled = false
     end)
     
-    return mainGui
+    return MainGui
 end
 
 -- === ОСНОВНАЯ ФУНКЦИЯ ===
 local function Main()
     print("╔══════════════════════════════╗")
-    print("║     Mobile AimBot Pro        ║")
-    print("║      Created by Kast13l      ║")
-    print("║     Optimized for Phone      ║")
+    print("║      Ultimate AimBot v4.0    ║")
+    print("║        Enhanced ESP          ║")
+    print("║       No FPS Limits          ║")
     print("╚══════════════════════════════╝")
     
-    -- Создаем интерфейс
-    local floatingButton, mainButton = CreateMobileButton()
-    local mainUI = CreateMobileInterface()
+    -- Create interface
+    local FloatingButton, MainButton = CreateFloatingButton()
+    local MainUI = CreateInterface()
     
-    -- Обработчик плавающей кнопки
-    mainButton.MouseButton1Click:Connect(function()
-        mainUI.Enabled = not mainUI.Enabled
+    -- Button handler
+    MainButton.MouseButton1Click:Connect(function()
+        MainUI.Enabled = not MainUI.Enabled
     end)
     
-    -- Инициализация функций
-    InitializeProESP()
-    InitializeProAimBot()
+    -- Initialize features
+    InitializeEnhancedESP()
+    InitializeAimBot()
+    InitializeVisuals()
     
-    -- Визуальные улучшения
-    local function ApplyVisualEnhancements()
-        game:GetService("RunService").Heartbeat:Connect(function()
-            if Config.Visuals.NoFog then
-                game:GetService("Lighting").FogEnd = 1000000
-            end
-            
-            if Config.Visuals.FullBright then
-                game:GetService("Lighting").GlobalShadows = false
-            end
-        end)
-    end
-    
-    ApplyVisualEnhancements()
-    
-    print("[MobileAimBot] 🎯 Best ESP & AimBot loaded!")
-    print("[MobileAimBot] 📱 Optimized for mobile devices")
-    print("[MobileAimBot] 👆 Click the blue button to open menu")
-    print("[MobileAimBot] 🎮 Features: Pro ESP, Smart AimBot, Visuals")
+    print("[UltimateAimBot] 🎯 Enhanced ESP & AimBot loaded!")
+    print("[UltimateAimBot] 🚀 No FPS limits - Maximum performance")
+    print("[UltimateAimBot] 👆 Click the blue button to open menu")
 end
 
--- Запуск
+-- Start
 Main()
